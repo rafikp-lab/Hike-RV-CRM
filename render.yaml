@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: hikerv-crm
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3000
+    disk:
+      name: crm-data
+      mountPath: /app/data
+      sizeGB: 1

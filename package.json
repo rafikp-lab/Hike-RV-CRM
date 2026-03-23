@@ -1,0 +1,15 @@
+{
+  "name": "hikerv-crm",
+  "version": "1.0.0",
+  "description": "Hike RV Sales CRM — cloud version",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.18.3"
+  }
+}
