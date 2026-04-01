@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hike RV — CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0efe9;
+  --border: #e2e0d8; --border2: #ccc9be;
+  --accent: #c8501a; --accent-hover: #a83f13; --accent-light: #fdf0eb;
+  --text: #1a1916; --text2: #5a5750; --text3: #9c9890;
+  --green: #2a7a4b; --green-bg: #eaf4ef;
+  --red: #b83232; --red-bg: #fbeaea;
+  --blue: #1e5fa8; --blue-bg: #e8f0fb;
+  --amber: #8a6200; --amber-bg: #fdf6e3;
+  --r: 8px; --r2: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+/* LAYOUT */
+#app { display: flex; height: 100vh; }
+.sidebar { width: 230px; flex-shrink: 0; background: var(--text); display: flex; flex-direction: column; }
+.sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-logo .brand { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+.sidebar-logo .tagline { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+.sidebar-section { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 18px 20px 6px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 500; transition: all 0.15s; border-left: 3px solid transparent; }
+.nav-item:hover { color: #fff; background: rgba(255,255,255,0.07); }
+.nav-item.active { color: #fff; background: rgba(200,80,26,0.2); border-left-color: var(--accent); }
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+.main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.topbar-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 600; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* LOADING OVERLAY */
+.loading-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); z-index: 9999; transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+.loading-bar.active { transform: scaleX(0.7); }
+.loading-bar.done { transform: scaleX(1); transition: transform 0.1s; }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--r); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif; white-space: nowrap; }
+.btn:hover { background: var(--surface2); border-color: var(--border2); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-danger { background: var(--red-bg); color: var(--red); border-color: #f0b0b0; }
+.btn-danger:hover { background: #f5d0d0; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { padding: 7px; }
+.btn svg { width: 14px; height: 14px; }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); box-shadow: var(--shadow); overflow: hidden; }
+.card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; }
+
+/* KPI */
+.kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+.kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 18px 20px; box-shadow: var(--shadow); }
+.kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 8px; }
+.kpi-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; line-height: 1; }
+.kpi-sub { font-size: 12px; color: var(--text3); margin-top: 5px; }
+.kpi-card.accent { border-top: 3px solid var(--accent); }
+.kpi-card.green  { border-top: 3px solid var(--green); }
+.kpi-card.blue   { border-top: 3px solid var(--blue); }
+.kpi-card.amber  { border-top: 3px solid #c9a227; }
+
+/* BADGES */
+.badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-open     { background: var(--blue-bg);  color: var(--blue); }
+.badge-won      { background: var(--green-bg); color: var(--green); }
+.badge-lost     { background: var(--red-bg);   color: var(--red); }
+.badge-pending  { background: var(--amber-bg); color: var(--amber); }
+.badge-none     { background: var(--surface2); color: var(--text3); }
+.badge-new      { background: #f0ebfd; color: #6b2fa0; }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); background: var(--surface2); border-bottom: 1px solid var(--border); white-space: nowrap; }
+tbody td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--surface2); }
+.td-name { display: flex; align-items: center; gap: 10px; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+.name-main { font-size: 13px; font-weight: 600; }
+.name-sub  { font-size: 11px; color: var(--text3); }
+.action-btns { display: flex; gap: 5px; opacity: 0; transition: opacity 0.15s; }
+tbody tr:hover .action-btns { opacity: 1; }
+
+/* FILTERS */
+.filters-bar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--surface2); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.search-input { flex: 1; min-width: 200px; padding: 8px 12px 8px 34px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); font-size: 13px; color: var(--text); outline: none; font-family: 'Inter', sans-serif; background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239c9890' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 10px center; }
+.search-input:focus { border-color: var(--accent); }
+.filter-sel { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); font-size: 13px; color: var(--text); outline: none; cursor: pointer; font-family: 'Inter', sans-serif; }
+.filter-count { font-size: 12px; color: var(--text3); margin-left: auto; }
+
+/* PAGINATION */
+.pagination { display: flex; align-items: center; gap: 6px; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--surface2); }
+.pg-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); font-size: 13px; cursor: pointer; color: var(--text2); transition: all 0.15s; }
+.pg-btn:hover { border-color: var(--accent); color: var(--accent); }
+.pg-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.pg-btn:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+.pg-info { font-size: 12px; color: var(--text3); margin-left: auto; }
+
+/* MODAL */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+.overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: 16px; width: 600px; max-width: 96vw; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: modalIn 0.2s ease; }
+@keyframes modalIn { from { transform: scale(0.96) translateY(8px); opacity: 0; } }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.modal-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 600; }
+.modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: var(--surface2); }
+.modal-footer-right { display: flex; gap: 8px; }
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-full { grid-column: 1 / -1; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-label .req { color: var(--accent); }
+.form-input, .form-select, .form-textarea { padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); font-size: 13px; color: var(--text); outline: none; font-family: 'Inter', sans-serif; transition: border-color 0.15s; width: 100%; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200,80,26,0.08); }
+.form-textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+/* STATUS SELECT inline */
+.status-select { padding: 3px 20px 3px 8px; border-radius: 20px; border: 1px solid; font-size: 11px; font-weight: 600; cursor: pointer; outline: none; font-family: 'Inter', sans-serif; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='8' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235a5750' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 6px center; }
+
+/* TOAST */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 9999; transition: transform 0.3s ease; pointer-events: none; }
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* CONFIRM */
+.confirm-modal { width: 380px; }
+.confirm-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--red-bg); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+
+/* DASHBOARD */
+.dash-grid { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+.dash-left, .dash-right { display: flex; flex-direction: column; gap: 16px; }
+.stat-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-bottom: 1px solid var(--border); }
+.stat-row:last-child { border-bottom: none; }
+.stat-label { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+.stat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.bar-row { display: flex; align-items: center; gap: 10px; padding: 8px 20px; }
+.bar-label { font-size: 12px; color: var(--text2); width: 120px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; }
+.bar-count { font-size: 12px; color: var(--text3); min-width: 20px; text-align: right; }
+
+/* KANBAN */
+.kanban-wrap { display: flex; gap: 14px; overflow-x: auto; padding: 16px; }
+.k-col { min-width: 200px; flex-shrink: 0; }
+.k-col-head { padding: 10px 12px; border-radius: var(--r) var(--r) 0 0; font-size: 12px; font-weight: 600; display: flex; justify-content: space-between; }
+.k-col-body { background: var(--surface2); border-radius: 0 0 var(--r) var(--r); padding: 8px; min-height: 60px; }
+.k-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 12px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
+.k-card:hover { border-color: var(--accent); }
+.k-card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.k-card-val   { font-size: 12px; color: var(--accent); font-weight: 600; }
+.k-card-prob  { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* REPORTS */
+.reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* TABS */
+.tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 20px; background: var(--surface); }
+.tab-item { padding: 11px 16px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text3); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+.tab-item:hover { color: var(--text); }
+.tab-item.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* DETAIL */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.detail-field { background: var(--surface2); border-radius: var(--r); padding: 10px 14px; }
+.detail-field .df-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.detail-field .df-value { font-size: 13px; font-weight: 500; }
+.notes-box { background: var(--surface2); border-radius: var(--r); padding: 14px; border-left: 3px solid var(--accent); font-size: 13px; line-height: 1.6; color: var(--text2); margin-bottom: 12px; }
+
+/* EMPTY */
+.empty-state { padding: 40px; text-align: center; color: var(--text3); font-size: 13px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+@media (max-width: 1100px) {
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .dash-grid { grid-template-columns: 1fr; }
+  .reports-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-bar" id="loading-bar"></div>
+
+<div id="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">Hike RV</div>
+      <div class="tagline">Cloud CRM</div>
+    </div>
+    <div class="sidebar-section">Menu</div>
+    <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" data-page="leads" onclick="navigate('leads')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Leads
+    </div>
+    <div class="nav-item" data-page="opportunities" onclick="navigate('opportunities')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Opportunities
+    </div>
+    <div class="nav-item" data-page="reports" onclick="navigate('reports')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Reports
+    </div>
+    <div class="nav-item" data-page="import" onclick="navigate('import')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import Excel
+    </div>
+    <div class="sidebar-bottom">
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:6px">Hike RV CRM — Cloud</div>
+      <div id="api-status" style="font-size:11px;color:rgba(255,255,255,0.4)">Connecting…</div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-right" id="topbar-actions"></div>
+    </div>
+    <div class="content" id="page-content">
+      <div class="empty-state">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- LEAD MODAL -->
+<div class="overlay" id="lead-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="lead-modal-title">Add New Lead</div>
+      <button class="btn btn-icon" onclick="closeModal('lead-modal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Name <span class="req">*</span></label><input class="form-input" id="f-name" placeholder="Full name"/></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="f-email" type="email" placeholder="email@example.com"/></div>
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="f-phone" placeholder="04xx xxx xxx"/></div>
+        <div class="form-group"><label class="form-label">State</label>
+          <select class="form-select" id="f-state"><option value="">— Select —</option>
+            <option>NSW</option><option>VIC</option><option>QLD</option><option>WA</option><option>SA</option><option>TAS</option><option>ACT</option><option>NT</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Model Interest</label>
+          <select class="form-select" id="f-model"><option value="">— Select —</option>
+            <option>Elite Series</option><option>Rover Series</option><option>Drifter Series</option><option>Others</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Size</label><input class="form-input" id="f-size" placeholder="e.g. 21ft, 19'6ft"/></div>
+        <div class="form-group"><label class="form-label">Lead Source</label>
+          <select class="form-select" id="f-source"><option value="">— Select —</option>
+            <option>Website Leads</option><option>Email Marketing</option><option>Organic Search</option><option>Paid Social</option><option>Paid Search</option><option>Referral</option><option>Cold Call</option><option>Other</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-select" id="f-status"><option value="">— Select —</option>
+            <option>New</option><option>Open</option><option>Contacted</option><option>Qualified</option><option>Won</option><option>Lost</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Action / Channel</label>
+          <select class="form-select" id="f-action"><option value="">— Select —</option>
+            <option>Email</option><option>WhatsApp</option><option>Phone Call</option><option>Meeting</option><option>SMS</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Next Action</label>
+          <select class="form-select" id="f-next-action"><option value="">— Select —</option>
+            <option>Email</option><option>WhatsApp</option><option>Phone Call</option><option>Send Quote</option><option>Follow Up</option><option>Meeting</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">First Contact Date</label><input class="form-input" id="f-date" type="date"/></div>
+        <div class="form-group"><label class="form-label">Next Action Date</label><input class="form-input" id="f-next-date" type="date"/></div>
+        <div class="form-group form-full"><label class="form-label">Customer Message / Notes</label><textarea class="form-textarea" id="f-notes" placeholder="Customer inquiry, requirements…"></textarea></div>
+        <div class="form-group form-full"><label class="form-label">Internal Notes</label><textarea class="form-textarea" id="f-internal" placeholder="Internal follow-up notes…" style="min-height:70px"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div id="lead-modal-extra"></div>
+      <div class="modal-footer-right">
+        <button class="btn" onclick="closeModal('lead-modal')">Cancel</button>
+        <button class="btn btn-primary" id="lead-save-btn" onclick="saveLead()">Save Lead</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DEAL MODAL -->
+<div class="overlay" id="deal-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="deal-modal-title">Add New Deal</div>
+      <button class="btn btn-icon" onclick="closeModal('deal-modal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group form-full"><label class="form-label">Deal Title <span class="req">*</span></label><input class="form-input" id="d-title" placeholder="Deal name"/></div>
+        <div class="form-group"><label class="form-label">Company</label><input class="form-input" id="d-company" placeholder="Company name"/></div>
+        <div class="form-group"><label class="form-label">Contact Name</label><input class="form-input" id="d-contact" placeholder="Contact person"/></div>
+        <div class="form-group"><label class="form-label">Deal Size ($)</label><input class="form-input" id="d-size" type="number" placeholder="0"/></div>
+        <div class="form-group"><label class="form-label">Probability (%)</label><input class="form-input" id="d-prob" type="number" min="0" max="100" placeholder="0–100"/></div>
+        <div class="form-group"><label class="form-label">Stage</label>
+          <select class="form-select" id="d-stage"><option>Qualification</option><option>Proposal</option><option>Negotiating</option><option>Closed - Won</option><option>Closed - Lost</option></select></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-select" id="d-status"><option>OPEN</option><option>WON</option><option>LOST</option></select></div>
+        <div class="form-group"><label class="form-label">Date Initiated</label><input class="form-input" id="d-initiated" type="date"/></div>
+        <div class="form-group"><label class="form-label">Expected Close Date</label><input class="form-input" id="d-close" type="date"/></div>
+        <div class="form-group form-full"><label class="form-label">Next Action</label><input class="form-input" id="d-next" placeholder="What's the next step?"/></div>
+        <div class="form-group form-full"><label class="form-label">Notes</label><textarea class="form-textarea" id="d-notes" placeholder="Deal notes…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div id="deal-modal-extra"></div>
+      <div class="modal-footer-right">
+        <button class="btn" onclick="closeModal('deal-modal')">Cancel</button>
+        <button class="btn btn-primary" id="deal-save-btn" onclick="saveDeal()">Save Deal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW LEAD MODAL -->
+<div class="overlay" id="view-modal">
+  <div class="modal" style="width:640px">
+    <div class="modal-header">
+      <div class="modal-title" id="view-modal-title">Lead Details</div>
+      <button class="btn btn-icon" onclick="closeModal('view-modal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="view-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="view-delete-btn">Delete Lead</button>
+      <div class="modal-footer-right">
+        <button class="btn" onclick="closeModal('view-modal')">Close</button>
+        <button class="btn btn-primary btn-sm" id="view-edit-btn">Edit Lead</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="overlay" id="confirm-modal">
+  <div class="modal confirm-modal">
+    <div class="modal-body" style="padding:20px 24px">
+      <div class="confirm-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b83232" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div>
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:600;margin-bottom:8px">Delete this record?</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.5" id="confirm-text">This cannot be undone.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('confirm-modal')">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── API ────────────────────────────────────────────────────
+const API = '';  // same origin — empty = relative URLs
+
+async function apiFetch(path, options = {}) {
+  loadingStart();
+  try {
+    const res = await fetch(API + path, {
+      headers: { 'Content-Type': 'application/json' },
+      ...options,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Request failed');
+    return json.data;
+  } catch (e) {
+    toast(e.message, 'error');
+    throw e;
+  } finally {
+    loadingDone();
+  }
+}
+
+const api = {
+  leads:  { 
+    list:   (q) => apiFetch('/api/leads' + (q ? '?' + new URLSearchParams(q) : '')),
+    get:    (id) => apiFetch(`/api/leads/${id}`),
+    create: (d)  => apiFetch('/api/leads', { method: 'POST', body: d }),
+    update: (id, d) => apiFetch(`/api/leads/${id}`, { method: 'PUT', body: d }),
+    status: (id, s) => apiFetch(`/api/leads/${id}/status`, { method: 'PATCH', body: { status: s } }),
+    delete: (id) => apiFetch(`/api/leads/${id}`, { method: 'DELETE' }),
+  },
+  deals: {
+    list:   (q) => apiFetch('/api/deals' + (q ? '?' + new URLSearchParams(q) : '')),
+    get:    (id) => apiFetch(`/api/deals/${id}`),
+    create: (d)  => apiFetch('/api/deals', { method: 'POST', body: d }),
+    update: (id, d) => apiFetch(`/api/deals/${id}`, { method: 'PUT', body: d }),
+    delete: (id) => apiFetch(`/api/deals/${id}`, { method: 'DELETE' }),
+  },
+  stats: () => apiFetch('/api/stats'),
+};
+
+// ── STATE ──────────────────────────────────────────────────
+let currentPage = 'dashboard';
+let editingLeadId = null, editingDealId = null;
+let leadFilters = { q:'', status:'', source:'', model:'', state:'' };
+let leadPageNum = 1; const PAGE_SIZE = 12;
+let allLeads = [], allDeals = [];
+let dealFilters = { q:'', status:'', stage:'' };
+let dealTab = 'table';
+
+// ── UTILS ──────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmtMoney = v => v >= 1e6 ? '$' + (v/1e6).toFixed(2).replace(/\.?0+$/,'') + 'M' : v >= 1e3 ? '$' + (v/1e3).toFixed(0) + 'K' : '$' + v;
+const initials = n => n.trim().split(/\s+/).map(w => w[0]||'').join('').toUpperCase().slice(0,2)||'?';
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function statusBadge(s) {
+  if (!s) return '<span class="badge badge-none">—</span>';
+  const m = { New:'badge-new', Open:'badge-open', Contacted:'badge-pending', Qualified:'badge-pending', Won:'badge-won', Lost:'badge-lost', OPEN:'badge-open', WON:'badge-won', LOST:'badge-lost' };
+  return `<span class="badge ${m[s]||'badge-none'}">${esc(s)}</span>`;
+}
+function statusSelStyle(s) {
+  const bg = { New:'#f0ebfd', Open:'var(--blue-bg)', Contacted:'var(--amber-bg)', Qualified:'var(--amber-bg)', Won:'var(--green-bg)', Lost:'var(--red-bg)' };
+  const fg = { New:'#6b2fa0', Open:'var(--blue)', Contacted:'var(--amber)', Qualified:'var(--amber)', Won:'var(--green)', Lost:'var(--red)' };
+  const bd = { New:'#c4a0e8', Open:'#90b8e8', Contacted:'#d4b86a', Qualified:'#d4b86a', Won:'#78c49a', Lost:'#e8a0a0' };
+  return `background:${bg[s]||'var(--surface2)'};color:${fg[s]||'var(--text3)'};border-color:${bd[s]||'var(--border)'}`;
+}
+
+function toast(msg, type) {
+  const t = $('toast');
+  t.textContent = (type === 'error' ? '✗ ' : '✓ ') + msg;
+  t.style.background = type === 'error' ? 'var(--red)' : 'var(--text)';
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function loadingStart() { const b = $('loading-bar'); b.classList.remove('done'); b.classList.add('active'); }
+function loadingDone()  { const b = $('loading-bar'); b.classList.remove('active'); b.classList.add('done'); setTimeout(() => b.classList.remove('done'), 400); }
+
+function openModal(id)  { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+['lead-modal','deal-modal','view-modal','confirm-modal'].forEach(id => {
+  $(id).addEventListener('click', e => { if (e.target.id === id) closeModal(id); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') ['lead-modal','deal-modal','view-modal','confirm-modal'].forEach(closeModal);
+});
+
+// ── NAVIGATION ─────────────────────────────────────────────
+function navigate(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  const titles = { dashboard:'Dashboard', leads:'Leads', opportunities:'Opportunities', reports:'Reports & Analytics', import:'Import from Excel / CSV' };
+  $('page-title').textContent = titles[page] || page;
+  const actions = $('topbar-actions');
+  if (page === 'leads') actions.innerHTML = `<button class="btn btn-primary" onclick="openAddLead()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Lead</button>`;
+  else if (page === 'opportunities') actions.innerHTML = `<button class="btn btn-primary" onclick="openAddDeal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Deal</button>`;
+  else actions.innerHTML = '';
+
+  if (page === 'dashboard') loadDashboard();
+  else if (page === 'leads') loadLeads();
+  else if (page === 'opportunities') loadDeals();
+  else if (page === 'reports') loadReports();
+  else if (page === 'import') loadImportPage();
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────
+async function loadDashboard() {
+  const s = await api.stats();
+  const recent = await api.leads.list({ q:'', status:'' });
+
+  const stageColors = { 'Qualification':'var(--blue)', 'Proposal':'var(--accent)', 'Negotiating':'#7c3aed', 'Closed - Won':'var(--green)', 'Closed - Lost':'var(--red)' };
+  const maxStage = Math.max(...s.byStage.map(x => x.val||0), 1);
+  const maxSrc   = Math.max(...s.bySource.map(x => x.cnt), 1);
+  const maxMd    = Math.max(...s.byModel.map(x => x.cnt), 1);
+  const winRate  = (s.leadWon + s.leadLost) > 0 ? Math.round(s.leadWon / (s.leadWon + s.leadLost) * 100) : 0;
+
+  $('page-content').innerHTML = `
+  <div class="kpi-grid">
+    <div class="kpi-card accent"><div class="kpi-label">Total Leads</div><div class="kpi-value">${s.leadTotal}</div><div class="kpi-sub">${s.leadOpen} active · ${s.leadWon} won</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Win Rate</div><div class="kpi-value">${winRate}%</div><div class="kpi-sub">${s.leadWon} won · ${s.leadLost} lost</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Pipeline Value</div><div class="kpi-value">${fmtMoney(s.pipeline)}</div><div class="kpi-sub">${s.dealTotal} active deals</div></div>
+    <div class="kpi-card amber"><div class="kpi-label">Weighted Forecast</div><div class="kpi-value">${fmtMoney(Math.round(s.weighted))}</div><div class="kpi-sub">Probability adjusted</div></div>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-left">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Recent Leads</div><button class="btn btn-sm" onclick="navigate('leads')">View All →</button></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Contact</th><th>Model</th><th>Source</th><th>State</th><th>Status</th><th>Last Contact</th></tr></thead>
+          <tbody>${recent.slice(0,8).map(l => `<tr onclick="viewLead(${l.id})" style="cursor:pointer">
+            <td><div class="td-name"><div class="avatar">${esc(initials(l.name))}</div><div><div class="name-main">${esc(l.name)}</div><div class="name-sub">${esc(l.email||'—')}</div></div></div></td>
+            <td style="font-size:13px">${esc(l.model||'—')}</td>
+            <td style="font-size:12px;color:var(--text3)">${esc(l.source||'—')}</td>
+            <td><span class="badge badge-none">${esc(l.state||'—')}</span></td>
+            <td>${statusBadge(l.status)}</td>
+            <td style="font-size:12px;color:var(--text3)">${esc(l.last_contact||'—')}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Deal Pipeline by Stage</div></div>
+        <div style="padding:14px 0">${s.byStage.map(x => `
+          <div class="bar-row">
+            <div class="bar-label">${esc(x.stage)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round((x.val||0)/maxStage*100)}%;background:${stageColors[x.stage]||'var(--accent)'}"></div></div>
+            <div class="bar-count" style="min-width:60px;text-align:right;font-size:12px">${fmtMoney(x.val||0)}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="dash-right">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Leads by Source</div></div>
+        <div style="padding:8px 0">${s.bySource.map(x => `
+          <div class="bar-row">
+            <div class="bar-label">${esc(x.source.length>16?x.source.slice(0,15)+'…':x.source)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(x.cnt/maxSrc*100)}%;background:var(--accent)"></div></div>
+            <div class="bar-count">${x.cnt}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Leads by Model</div></div>
+        <div style="padding:8px 0">${s.byModel.map(x => `
+          <div class="bar-row">
+            <div class="bar-label">${esc(x.model)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(x.cnt/maxMd*100)}%;background:var(--blue)"></div></div>
+            <div class="bar-count">${x.cnt}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Lead Status</div></div>
+        <div>${[['New','#7c3aed'],['Open','var(--blue)'],['Contacted','var(--amber)'],['Qualified','var(--accent)'],['Won','var(--green)'],['Lost','var(--red)']].map(([st,col]) => {
+          const cnt = s.byStatus.find(x=>x.status===st)?.cnt||0;
+          return `<div class="stat-row"><div class="stat-label"><span class="stat-dot" style="background:${col}"></span>${st}</div><div style="font-weight:600">${cnt}</div></div>`;
+        }).join('')}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── LEADS ──────────────────────────────────────────────────
+async function loadLeads() {
+  allLeads = await api.leads.list(Object.fromEntries(Object.entries(leadFilters).filter(([,v])=>v)));
+  renderLeadsTable();
+}
+
+function renderLeadsTable() {
+  const total = allLeads.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (leadPageNum > totalPages) leadPageNum = totalPages;
+  const paged = allLeads.slice((leadPageNum-1)*PAGE_SIZE, leadPageNum*PAGE_SIZE);
+
+  $('page-content').innerHTML = `
+  <div class="card">
+    <div class="filters-bar">
+      <input class="search-input" type="text" placeholder="Search name, email, model…" value="${esc(leadFilters.q)}" oninput="leadFilters.q=this.value;debounceLoad()" />
+      <select class="filter-sel" onchange="leadFilters.status=this.value;leadPageNum=1;loadLeads()">
+        <option value="">All Status</option>
+        ${['New','Open','Contacted','Qualified','Won','Lost'].map(s=>`<option${leadFilters.status===s?' selected':''}>${s}</option>`).join('')}
+      </select>
+      <select class="filter-sel" onchange="leadFilters.model=this.value;leadPageNum=1;loadLeads()">
+        <option value="">All Models</option>
+        ${['Elite Series','Rover Series','Drifter Series','Others'].map(m=>`<option${leadFilters.model===m?' selected':''}>${m}</option>`).join('')}
+      </select>
+      <select class="filter-sel" onchange="leadFilters.source=this.value;leadPageNum=1;loadLeads()">
+        <option value="">All Sources</option>
+        ${['Website Leads','Email Marketing','Organic Search','Paid Social','Paid Search','Referral','Cold Call','Other'].map(s=>`<option${leadFilters.source===s?' selected':''}>${s}</option>`).join('')}
+      </select>
+      <select class="filter-sel" onchange="leadFilters.state=this.value;leadPageNum=1;loadLeads()">
+        <option value="">All States</option>
+        ${['NSW','VIC','QLD','WA','SA','TAS','ACT','NT'].map(s=>`<option${leadFilters.state===s?' selected':''}>${s}</option>`).join('')}
+      </select>
+      ${Object.values(leadFilters).some(v=>v) ? `<button class="btn btn-sm" onclick="leadFilters={q:'',status:'',source:'',model:'',state:''};leadPageNum=1;loadLeads()">Clear ✕</button>` : ''}
+      <div class="filter-count">${total} lead${total!==1?'s':''}</div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Contact</th><th>Model</th><th>Size</th><th>Source</th><th>Action</th><th>Status</th><th>State</th><th>Next Action</th><th>Last Contact</th><th style="text-align:center">Actions</th></tr></thead>
+      <tbody>${paged.length ? paged.map(l => `
+        <tr>
+          <td onclick="viewLead(${l.id})" style="cursor:pointer">
+            <div class="td-name"><div class="avatar">${esc(initials(l.name))}</div><div><div class="name-main">${esc(l.name)}</div><div class="name-sub">${esc(l.email||'—')}</div></div></div>
+          </td>
+          <td style="font-size:13px">${esc(l.model||'—')}</td>
+          <td style="font-size:12px;color:var(--text3)">${esc(l.size||'—')}</td>
+          <td style="font-size:12px;color:var(--text3)">${esc(l.source||'—')}</td>
+          <td style="font-size:12px">${esc(l.action||'—')}</td>
+          <td>
+            <select class="status-select" style="${statusSelStyle(l.status)}" onchange="quickStatus(${l.id},this.value)">
+              ${['New','Open','Contacted','Qualified','Won','Lost'].map(s=>`<option${l.status===s?' selected':''}>${s}</option>`).join('')}
+            </select>
+          </td>
+          <td><span class="badge badge-none">${esc(l.state||'—')}</span></td>
+          <td style="font-size:12px;color:var(--text3)">${esc(l.next_action||'—')}</td>
+          <td style="font-size:12px;color:var(--text3)">${esc(l.last_contact||'—')}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-sm" onclick="event.stopPropagation();openEditLead(${l.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
+              <button class="btn btn-sm delete-btn" onclick="event.stopPropagation();confirmDeleteLead(${l.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Del</button>
+            </div>
+          </td>
+        </tr>`).join('') : '<tr><td colspan="10"><div class="empty-state">No leads match your filters.</div></td></tr>'}
+      </tbody>
+    </table></div>
+    <div class="pagination">
+      <button class="pg-btn" onclick="leadPageNum=Math.max(1,leadPageNum-1);renderLeadsTable()" ${leadPageNum===1?'disabled':''}>‹</button>
+      ${Array.from({length:totalPages},(_,i)=>`<button class="pg-btn${leadPageNum===i+1?' active':''}" onclick="leadPageNum=${i+1};renderLeadsTable()">${i+1}</button>`).join('')}
+      <button class="pg-btn" onclick="leadPageNum=Math.min(${totalPages},leadPageNum+1);renderLeadsTable()" ${leadPageNum===totalPages?'disabled':''}>›</button>
+      <div class="pg-info">Page ${leadPageNum} of ${totalPages} · ${total} records</div>
+    </div>
+  </div>`;
+}
+
+let _debounce;
+function debounceLoad() { clearTimeout(_debounce); _debounce = setTimeout(() => { leadPageNum=1; loadLeads(); }, 350); }
+
+async function quickStatus(id, status) {
+  await api.leads.status(id, status);
+  const lead = allLeads.find(l => l.id === id);
+  if (lead) { lead.status = status; toast(`Status → ${status}`); renderLeadsTable(); }
+}
+
+// ── LEAD CRUD ─────────────────────────────────────────────
+function openAddLead() {
+  editingLeadId = null;
+  $('lead-modal-title').textContent = 'Add New Lead';
+  $('lead-modal-extra').innerHTML = '';
+  ['f-name','f-email','f-phone','f-size','f-notes','f-internal'].forEach(id => $(id).value = '');
+  ['f-state','f-model','f-source','f-status','f-action','f-next-action','f-next-date'].forEach(id => $(id).value = '');
+  $('f-date').value = new Date().toISOString().slice(0,10);
+  openModal('lead-modal');
+}
+
+async function openEditLead(id) {
+  const l = await api.leads.get(id);
+  editingLeadId = id;
+  $('lead-modal-title').textContent = 'Edit — ' + l.name;
+  $('f-name').value = l.name||''; $('f-email').value = l.email||''; $('f-phone').value = l.phone||'';
+  $('f-state').value = l.state||''; $('f-model').value = l.model||''; $('f-size').value = l.size||'';
+  $('f-source').value = l.source||''; $('f-status').value = l.status||'';
+  $('f-action').value = l.action||''; $('f-next-action').value = l.next_action||'';
+  $('f-date').value = l.date||''; $('f-next-date').value = l.next_date||'';
+  $('f-notes').value = l.notes||''; $('f-internal').value = l.internal||'';
+  $('lead-modal-extra').innerHTML = `<button class="btn btn-danger btn-sm" onclick="confirmDeleteLead(${id});closeModal('lead-modal')">Delete</button>`;
+  openModal('lead-modal');
+}
+
+async function saveLead() {
+  const name = $('f-name').value.trim();
+  if (!name) { $('f-name').focus(); $('f-name').style.borderColor='var(--red)'; return; }
+  $('f-name').style.borderColor = '';
+  $('lead-save-btn').disabled = true;
+
+  const data = { name, email:$('f-email').value.trim(), phone:$('f-phone').value.trim(),
+    state:$('f-state').value, model:$('f-model').value, size:$('f-size').value.trim(),
+    source:$('f-source').value, status:$('f-status').value||'New',
+    action:$('f-action').value, next_action:$('f-next-action').value,
+    date:$('f-date').value, next_date:$('f-next-date').value,
+    notes:$('f-notes').value.trim(), internal:$('f-internal').value.trim() };
+
+  try {
+    if (editingLeadId) { await api.leads.update(editingLeadId, data); toast('Lead updated'); }
+    else               { await api.leads.create(data); toast('Lead added'); }
+    closeModal('lead-modal');
+    loadLeads();
+  } finally { $('lead-save-btn').disabled = false; }
+}
+
+async function viewLead(id) {
+  const l = await api.leads.get(id);
+  $('view-modal-title').textContent = l.name;
+  $('view-modal-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+      <div class="avatar" style="width:46px;height:46px;font-size:15px">${esc(initials(l.name))}</div>
+      <div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:600">${esc(l.name)}</div>
+      <div style="font-size:13px;color:var(--text3)">${esc(l.model||'No model')}</div></div>
+      <div style="margin-left:auto">${statusBadge(l.status)}</div>
+    </div>
+    <div class="detail-grid">
+      ${[['Email',l.email],['Phone',l.phone],['State',l.state],['Size',l.size],['Source',l.source],['Action',l.action],['First Contact',l.date],['Last Contact',l.last_contact],['Next Action',l.next_action],['Next Date',l.next_date]].map(([k,v])=>`
+      <div class="detail-field"><div class="df-label">${k}</div><div class="df-value">${esc(v||'—')}</div></div>`).join('')}
+    </div>
+    ${l.notes    ? `<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Customer Message</div><div class="notes-box">${esc(l.notes)}</div></div>` : ''}
+    ${l.internal ? `<div><div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Internal Notes</div><div class="notes-box" style="border-left-color:var(--blue)">${esc(l.internal)}</div></div>` : ''}
+  `;
+  $('view-delete-btn').onclick = () => { closeModal('view-modal'); confirmDeleteLead(id); };
+  $('view-edit-btn').onclick   = () => { closeModal('view-modal'); openEditLead(id); };
+  openModal('view-modal');
+}
+
+function confirmDeleteLead(id) {
+  const l = allLeads.find(x => x.id === id);
+  $('confirm-text').textContent = `Delete "${l?.name||'this lead'}"? This cannot be undone.`;
+  $('confirm-ok-btn').onclick = async () => {
+    await api.leads.delete(id);
+    closeModal('confirm-modal'); toast('Lead deleted'); loadLeads();
+  };
+  openModal('confirm-modal');
+}
+
+// ── OPPORTUNITIES ─────────────────────────────────────────
+async function loadDeals() {
+  allDeals = await api.deals.list(Object.fromEntries(Object.entries(dealFilters).filter(([,v])=>v)));
+  renderDealsPage();
+}
+
+function renderDealsPage() {
+  const total = allDeals.reduce((a,d)=>a+d.size,0);
+  const weighted = allDeals.reduce((a,d)=>a+(d.size*d.prob/100),0);
+  const stages = ['Qualification','Proposal','Negotiating','Closed - Won','Closed - Lost'];
+  const stageHeadStyle = { 'Qualification':'background:var(--blue-bg);color:var(--blue)', 'Proposal':'background:var(--accent-light);color:var(--accent)', 'Negotiating':'background:#f5f0fd;color:#6b2fa0', 'Closed - Won':'background:var(--green-bg);color:var(--green)', 'Closed - Lost':'background:var(--red-bg);color:var(--red)' };
+
+  $('page-content').innerHTML = `
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+    <div class="kpi-card blue"><div class="kpi-label">Total Deals</div><div class="kpi-value">${allDeals.length}</div></div>
+    <div class="kpi-card accent"><div class="kpi-label">Total Value</div><div class="kpi-value">${fmtMoney(total)}</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Weighted Forecast</div><div class="kpi-value">${fmtMoney(Math.round(weighted))}</div></div>
+  </div>
+  <div class="card">
+    <div class="tabs" id="deal-tabs">
+      <div class="tab-item${dealTab==='table'?' active':''}" onclick="dealTab='table';renderDealsPage()">Table View</div>
+      <div class="tab-item${dealTab==='kanban'?' active':''}" onclick="dealTab='kanban';renderDealsPage()">Kanban View</div>
+    </div>
+    <div class="filters-bar">
+      <input class="search-input" type="text" placeholder="Search deals…" value="${esc(dealFilters.q)}" oninput="dealFilters.q=this.value;loadDeals()" style="max-width:280px"/>
+      <select class="filter-sel" onchange="dealFilters.status=this.value;loadDeals()">
+        <option value="">All Status</option>${['OPEN','WON','LOST'].map(s=>`<option${dealFilters.status===s?' selected':''}>${s}</option>`).join('')}
+      </select>
+      <select class="filter-sel" onchange="dealFilters.stage=this.value;loadDeals()">
+        <option value="">All Stages</option>${stages.map(s=>`<option${dealFilters.stage===s?' selected':''}>${s}</option>`).join('')}
+      </select>
+      <div class="filter-count">${allDeals.length} deal${allDeals.length!==1?'s':''}</div>
+    </div>
+    ${dealTab === 'table' ? `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Deal</th><th>Company</th><th>Deal Size</th><th>Probability</th><th>Weighted</th><th>Stage</th><th>Status</th><th>Next Action</th><th>Closing</th><th>Actions</th></tr></thead>
+      <tbody>${allDeals.map(d=>`<tr>
+        <td style="font-weight:600;font-size:13px">${esc(d.title)}</td>
+        <td style="font-size:12px;color:var(--text3)">${esc(d.company||'—')}</td>
+        <td style="font-weight:600">${fmtMoney(d.size)}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div style="width:50px;height:5px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;width:${d.prob}%;background:${d.prob>=70?'var(--green)':d.prob>=40?'var(--accent)':'var(--red)'};border-radius:3px"></div></div><span style="font-size:12px;color:var(--text3)">${d.prob}%</span></div></td>
+        <td style="font-weight:600;color:var(--accent)">${fmtMoney(Math.round(d.size*d.prob/100))}</td>
+        <td>${statusBadge(d.stage.includes('Closed')?d.stage.split(' - ')[1]:d.stage)}</td>
+        <td>${statusBadge(d.status)}</td>
+        <td style="font-size:12px;color:var(--text3)">${esc(d.next_action||'—')}</td>
+        <td style="font-size:12px;color:var(--text3)">${esc(d.closing||'—')}</td>
+        <td><div class="action-btns">
+          <button class="btn btn-sm" onclick="openEditDeal(${d.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
+          <button class="btn btn-sm delete-btn" onclick="confirmDeleteDeal(${d.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Del</button>
+        </div></td>
+      </tr>`).join('')}</tbody>
+    </table></div>` : `
+    <div class="kanban-wrap">${stages.map(stage=>{
+      const cols = allDeals.filter(d=>d.stage===stage);
+      return `<div class="k-col"><div class="k-col-head" style="${stageHeadStyle[stage]}"><span>${stage}</span><span>${cols.length}</span></div>
+      <div class="k-col-body">${cols.map(d=>`<div class="k-card" onclick="openEditDeal(${d.id})"><div class="k-card-title">${esc(d.title)}</div><div class="k-card-val">${fmtMoney(d.size)}</div><div class="k-card-prob">${d.prob}% · ${esc(d.status)}</div></div>`).join('')}
+      ${!cols.length?'<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Empty</div>':''}</div></div>`;
+    }).join('')}</div>`}
+  </div>`;
+}
+
+function openAddDeal() {
+  editingDealId = null;
+  $('deal-modal-title').textContent = 'Add New Deal';
+  $('deal-modal-extra').innerHTML = '';
+  ['d-title','d-company','d-contact','d-next','d-notes'].forEach(id => $(id).value='');
+  $('d-size').value=''; $('d-prob').value='';
+  $('d-stage').value='Qualification'; $('d-status').value='OPEN';
+  $('d-initiated').value = new Date().toISOString().slice(0,10);
+  $('d-close').value='';
+  openModal('deal-modal');
+}
+
+async function openEditDeal(id) {
+  const d = await api.deals.get(id);
+  editingDealId = id;
+  $('deal-modal-title').textContent = 'Edit — ' + d.title;
+  $('d-title').value=d.title||''; $('d-company').value=d.company||''; $('d-contact').value=d.contact||'';
+  $('d-size').value=d.size||''; $('d-prob').value=d.prob||'';
+  $('d-stage').value=d.stage||'Qualification'; $('d-status').value=d.status||'OPEN';
+  $('d-initiated').value=d.initiated||''; $('d-close').value=d.closing||'';
+  $('d-next').value=d.next_action||''; $('d-notes').value=d.notes||'';
+  $('deal-modal-extra').innerHTML = `<button class="btn btn-danger btn-sm" onclick="confirmDeleteDeal(${id});closeModal('deal-modal')">Delete</button>`;
+  openModal('deal-modal');
+}
+
+async function saveDeal() {
+  const title = $('d-title').value.trim();
+  if (!title) { $('d-title').focus(); $('d-title').style.borderColor='var(--red)'; return; }
+  $('d-title').style.borderColor='';
+  $('deal-save-btn').disabled = true;
+
+  const data = { title, company:$('d-company').value.trim(), contact:$('d-contact').value.trim(),
+    size:parseFloat($('d-size').value)||0, prob:parseFloat($('d-prob').value)||0,
+    stage:$('d-stage').value, status:$('d-status').value,
+    initiated:$('d-initiated').value, closing:$('d-close').value,
+    next_action:$('d-next').value.trim(), notes:$('d-notes').value.trim() };
+
+  try {
+    if (editingDealId) { await api.deals.update(editingDealId, data); toast('Deal updated'); }
+    else               { await api.deals.create(data); toast('Deal added'); }
+    closeModal('deal-modal'); loadDeals();
+  } finally { $('deal-save-btn').disabled = false; }
+}
+
+function confirmDeleteDeal(id) {
+  const d = allDeals.find(x => x.id === id);
+  $('confirm-text').textContent = `Delete deal "${d?.title||'this deal'}"? This cannot be undone.`;
+  $('confirm-ok-btn').onclick = async () => {
+    await api.deals.delete(id);
+    closeModal('confirm-modal'); toast('Deal deleted'); loadDeals();
+  };
+  openModal('confirm-modal');
+}
+
+// ── REPORTS ───────────────────────────────────────────────
+async function loadReports() {
+  const s = await api.stats();
+  const maxSrc   = Math.max(...s.bySource.map(x=>x.cnt), 1);
+  const maxMd    = Math.max(...s.byModel.map(x=>x.cnt), 1);
+  const maxState = Math.max(...s.byState.map(x=>x.cnt), 1);
+  const maxStRev = Math.max(...s.byStage.map(x=>x.val||0), 1);
+  const winRate  = (s.leadWon+s.leadLost)>0 ? Math.round(s.leadWon/(s.leadWon+s.leadLost)*100) : 0;
+  const avgDeal  = s.dealTotal ? Math.round(s.pipeline/s.dealTotal) : 0;
+  const wonDeals = (await api.deals.list({status:'WON'})).length;
+  const lostDeals= (await api.deals.list({status:'LOST'})).length;
+
+  const bar = (val,max,color) => `<div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/max*100)}%;background:${color}"></div></div>`;
+
+  $('page-content').innerHTML = `
+  <div class="kpi-grid" style="margin-bottom:20px">
+    <div class="kpi-card green"><div class="kpi-label">Win Rate</div><div class="kpi-value">${winRate}%</div><div class="kpi-sub">${s.leadWon} won · ${s.leadLost} lost</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Active Leads</div><div class="kpi-value">${s.leadOpen}</div><div class="kpi-sub">Needs follow-up</div></div>
+    <div class="kpi-card accent"><div class="kpi-label">Avg Deal Size</div><div class="kpi-value">${fmtMoney(avgDeal)}</div><div class="kpi-sub">Across ${s.dealTotal} deals</div></div>
+    <div class="kpi-card amber"><div class="kpi-label">Weighted Pipeline</div><div class="kpi-value">${fmtMoney(Math.round(s.weighted))}</div><div class="kpi-sub">Probability adjusted</div></div>
+  </div>
+  <div class="reports-grid">
+    <div class="card"><div class="card-header"><div class="card-title">Leads by Source</div></div><div style="padding:8px 0">${s.bySource.map(x=>`<div class="bar-row"><div class="bar-label">${esc(x.source)}</div>${bar(x.cnt,maxSrc,'var(--accent)')}<div class="bar-count">${x.cnt}</div></div>`).join('')}</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Leads by Model</div></div><div style="padding:8px 0">${s.byModel.map(x=>`<div class="bar-row"><div class="bar-label">${esc(x.model)}</div>${bar(x.cnt,maxMd,'var(--blue)')}<div class="bar-count">${x.cnt}</div></div>`).join('')}</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Leads by State</div></div><div style="padding:8px 0">${s.byState.map(x=>`<div class="bar-row"><div class="bar-label">${esc(x.state)}</div>${bar(x.cnt,maxState,'var(--green)')}<div class="bar-count">${x.cnt}</div></div>`).join('')}</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Revenue by Deal Stage</div></div><div style="padding:8px 0">${s.byStage.sort((a,b)=>(b.val||0)-(a.val||0)).map(x=>`<div class="bar-row"><div class="bar-label" style="font-size:11px">${esc(x.stage)}</div>${bar(x.val||0,maxStRev,'var(--accent)')}<div class="bar-count" style="min-width:52px;text-align:right;font-size:11px">${fmtMoney(x.val||0)}</div></div>`).join('')}</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Lead Status Breakdown</div></div><div>${[['New','#7c3aed'],['Open','var(--blue)'],['Contacted','var(--amber)'],['Qualified','var(--accent)'],['Won','var(--green)'],['Lost','var(--red)']].map(([st,col])=>{const cnt=s.byStatus.find(x=>x.status===st)?.cnt||0;const pct=s.leadTotal?Math.round(cnt/s.leadTotal*100):0;return`<div class="stat-row"><div class="stat-label"><span class="stat-dot" style="background:${col}"></span>${st}</div><div style="flex:1;margin:0 12px;height:5px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${col};border-radius:3px"></div></div><div style="font-weight:600;font-size:13px">${cnt} <span style="font-size:11px;color:var(--text3);font-weight:400">(${pct}%)</span></div></div>`;}).join('')}</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Deal Summary</div></div><div>
+      ${[['Total pipeline value',fmtMoney(s.pipeline)],['Weighted forecast',fmtMoney(Math.round(s.weighted))],['Open deals',s.dealTotal-wonDeals-lostDeals],['Won deals',wonDeals],['Lost deals',lostDeals],['Avg probability',s.dealTotal?Math.round(0)+'%':'0%']].map(([l,v])=>`<div class="stat-row"><div class="stat-label">${l}</div><div style="font-weight:600">${v}</div></div>`).join('')}
+    </div></div>
+  </div>`;
+}
+
+// ── IMPORT PAGE ───────────────────────────────────────────
+let importRows = [];   // parsed rows from file
+let importMapping = {}; // col index → crm field
+
+const CRM_FIELDS = [
+  { key:'name',        label:'Name *' },
+  { key:'email',       label:'Email' },
+  { key:'phone',       label:'Phone' },
+  { key:'state',       label:'State' },
+  { key:'model',       label:'Model' },
+  { key:'size',        label:'Size' },
+  { key:'source',      label:'Lead Source' },
+  { key:'status',      label:'Status' },
+  { key:'action',      label:'Action' },
+  { key:'notes',       label:'Notes / Message' },
+  { key:'date',        label:'Date' },
+  { key:'_skip',       label:'— Skip this column —' },
+];
+
+function loadImportPage() {
+  importRows = [];
+  importMapping = {};
+  $('page-content').innerHTML = `
+  <div style="max-width:900px">
+
+    <!-- STEP 1: Upload -->
+    <div class="card" id="imp-step1" style="margin-bottom:16px">
+      <div class="card-header"><div class="card-title">Step 1 — Upload your Excel or CSV file</div></div>
+      <div style="padding:24px">
+        <div id="drop-zone" style="border:2px dashed var(--border2);border-radius:var(--r2);padding:48px 24px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--surface2)" 
+          onclick="$('file-input').click()" 
+          ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--accent-light)'"
+          ondragleave="this.style.borderColor='var(--border2)';this.style.background='var(--surface2)'"
+          ondrop="handleDrop(event)">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" style="margin-bottom:12px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div style="font-size:15px;font-weight:600;margin-bottom:6px;color:var(--text)">Drop your Excel or CSV file here</div>
+          <div style="font-size:13px;color:var(--text3)">or click to browse — .xlsx, .xls, .csv supported · up to 5,000 rows</div>
+        </div>
+        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(this.files[0])">
+        <div style="margin-top:16px;padding:14px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Your Excel columns can be named anything — examples:</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${['Name / Full Name / Contact','Email / Email Address','Phone / Mobile / Phone Number','State / Location','Model / Product Interest','Source / Lead Source','Status','Notes / Message / Comments'].map(h=>`<span style="font-size:11px;padding:3px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px;color:var(--text2)">${h}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Map columns (hidden until file loaded) -->
+    <div class="card" id="imp-step2" style="display:none;margin-bottom:16px">
+      <div class="card-header">
+        <div class="card-title">Step 2 — Map your columns to CRM fields</div>
+        <div id="imp-row-count" style="font-size:12px;color:var(--text3)"></div>
+      </div>
+      <div id="imp-mapping" style="padding:20px"></div>
+    </div>
+
+    <!-- STEP 3: Preview (hidden until mapped) -->
+    <div class="card" id="imp-step3" style="display:none;margin-bottom:16px">
+      <div class="card-header">
+        <div class="card-title">Step 3 — Preview (first 5 rows)</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="imp-skip-dups" checked style="accent-color:var(--accent)"> Skip duplicate emails
+          </label>
+          <button class="btn btn-primary" onclick="runImport()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import All Leads
+          </button>
+        </div>
+      </div>
+      <div id="imp-preview" style="overflow-x:auto"></div>
+    </div>
+
+    <!-- STEP 4: Result -->
+    <div id="imp-result" style="display:none"></div>
+  </div>`;
+
+  // Load SheetJS
+  if (!window.XLSX) {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    document.head.appendChild(s);
+  }
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  const dz = $('drop-zone');
+  dz.style.borderColor = 'var(--border2)';
+  dz.style.background = 'var(--surface2)';
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  if (!window.XLSX) { toast('Library still loading, try again in 1 second', 'error'); return; }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      if (raw.length < 2) { toast('File appears empty or has no data rows', 'error'); return; }
+
+      const headers = raw[0].map(h => String(h).trim());
+      importRows = raw.slice(1).filter(r => r.some(c => String(c).trim()));
+
+      // Auto-detect column mapping
+      importMapping = {};
+      const autoMap = {
+        name:   ['name','full name','fullname','contact name','contact','first name','firstname','lead name'],
+        email:  ['email','email address','e-mail'],
+        phone:  ['phone','phone number','mobile','mobile number','telephone','ph'],
+        state:  ['state','location','region','city'],
+        model:  ['model','model interest','product','product interest','caravan type','van type','type','series'],
+        size:   ['size','length','van size'],
+        source: ['source','lead source','channel'],
+        status: ['status','lead status'],
+        action: ['action','next action','channel'],
+        notes:  ['notes','message','comments','description','note','inquiry'],
+        date:   ['date','date of contact','first contact','contact date','created'],
+      };
+
+      headers.forEach((h, i) => {
+        const lower = h.toLowerCase().trim();
+        for (const [field, aliases] of Object.entries(autoMap)) {
+          if (aliases.includes(lower) && !Object.values(importMapping).includes(field)) {
+            importMapping[i] = field;
+            break;
+          }
+        }
+        if (importMapping[i] === undefined) importMapping[i] = '_skip';
+      });
+
+      $('imp-row-count').textContent = `${importRows.length} rows found`;
+
+      // Render mapping UI
+      $('imp-mapping').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+          ${headers.map((h, i) => `
+          <div style="background:var(--surface2);border-radius:var(--r);padding:12px 14px;border:1px solid var(--border)">
+            <div style="font-size:12px;color:var(--text3);margin-bottom:6px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap" title="${esc(h)}">
+              Column: <strong style="color:var(--text)">${esc(h) || '(empty)'}</strong>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px">
+              Sample: ${esc(String(importRows[0]?.[i] || '—').slice(0,40))}
+            </div>
+            <select style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;background:var(--surface);color:var(--text);outline:none;font-family:'Inter',sans-serif"
+              onchange="importMapping[${i}]=this.value;renderImportPreview()">
+              ${CRM_FIELDS.map(f => `<option value="${f.key}"${importMapping[i]===f.key?' selected':''}>${f.label}</option>`).join('')}
+            </select>
+          </div>`).join('')}
+        </div>
+        <div style="margin-top:16px;text-align:right">
+          <button class="btn btn-primary" onclick="renderImportPreview()">
+            Preview →
+          </button>
+        </div>`;
+
+      $('imp-step2').style.display = 'block';
+      renderImportPreview();
+    } catch(err) {
+      toast('Could not read file: ' + err.message, 'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+
+  // Update drop zone
+  $('drop-zone').innerHTML = `
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="margin-bottom:8px"><polyline points="20 6 9 17 4 12"/></svg>
+    <div style="font-size:14px;font-weight:600;color:var(--green)">${esc(file.name)}</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:4px">${(file.size/1024).toFixed(0)} KB · <span style="cursor:pointer;color:var(--accent)" onclick="$('file-input').click()">Change file</span></div>`;
+}
+
+function renderImportPreview() {
+  const preview = importRows.slice(0, 5);
+  const mapped = importRows.map(row => buildLeadFromRow(row));
+  const mappedFields = CRM_FIELDS.filter(f => f.key !== '_skip' && Object.values(importMapping).includes(f.key));
+
+  if (!mappedFields.length) { $('imp-step3').style.display = 'none'; return; }
+
+  $('imp-preview').innerHTML = `
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr>
+        ${mappedFields.map(f => `<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap">${f.label.replace(' *','')}</th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${preview.map(lead => `<tr>
+          ${mappedFields.map(f => `<td style="padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle">${esc(String(lead[f.key]||'—').slice(0,50))}</td>`).join('')}
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+    ${importRows.length > 5 ? `<div style="padding:12px 16px;font-size:12px;color:var(--text3);background:var(--surface2);border-top:1px solid var(--border)">Showing 5 of ${importRows.length} rows</div>` : ''}`;
+
+  $('imp-step3').style.display = 'block';
+}
+
+function buildLeadFromRow(row) {
+  const lead = {};
+  Object.entries(importMapping).forEach(([colIdx, field]) => {
+    if (field === '_skip') return;
+    let val = row[colIdx];
+    // Handle Excel date serial numbers
+    if (field === 'date' && typeof val === 'number') {
+      try {
+        const d = XLSX.SSF.parse_date_code(val);
+        val = `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+      } catch(e) { val = ''; }
+    }
+    lead[field] = String(val ?? '').trim();
+  });
+  return lead;
+}
+
+async function runImport() {
+  const leads = importRows.map(row => buildLeadFromRow(row)).filter(l => l.name);
+  if (!leads.length) { toast('No valid rows to import (name column required)', 'error'); return; }
+
+  const skipDuplicates = $('imp-skip-dups')?.checked ?? true;
+  const btn = document.querySelector('#imp-step3 .btn-primary');
+  btn.disabled = true;
+  btn.textContent = `Importing ${leads.length} leads…`;
+
+  try {
+    const result = await apiFetch('/api/leads/import', { method:'POST', body: { leads, skipDuplicates } });
+
+    $('imp-result').style.display = 'block';
+    $('imp-result').innerHTML = `
+      <div class="card">
+        <div class="card-header"><div class="card-title">Import Complete</div></div>
+        <div style="padding:24px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px">
+            <div style="background:var(--green-bg);border-radius:var(--r2);padding:18px;text-align:center;border:1px solid #78c49a">
+              <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:700;color:var(--green)">${result.imported}</div>
+              <div style="font-size:12px;color:var(--green);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px">Imported</div>
+            </div>
+            <div style="background:var(--amber-bg);border-radius:var(--r2);padding:18px;text-align:center;border:1px solid #d4b86a">
+              <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:700;color:var(--amber)">${result.skipped}</div>
+              <div style="font-size:12px;color:var(--amber);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px">Skipped (dupes)</div>
+            </div>
+            <div style="background:var(--red-bg);border-radius:var(--r2);padding:18px;text-align:center;border:1px solid #e8a0a0">
+              <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:700;color:var(--red)">${result.errors.length}</div>
+              <div style="font-size:12px;color:var(--red);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px">Errors</div>
+            </div>
+          </div>
+          ${result.errors.length ? `
+          <div style="background:var(--red-bg);border-radius:var(--r);padding:14px;margin-bottom:16px;border:1px solid #e8a0a0">
+            <div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:8px">Errors (first 20):</div>
+            ${result.errors.map(e => `<div style="font-size:12px;color:var(--red);padding:2px 0">${esc(e)}</div>`).join('')}
+          </div>` : ''}
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary" onclick="navigate('leads')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              View Leads
+            </button>
+            <button class="btn" onclick="loadImportPage()">Import Another File</button>
+          </div>
+        </div>
+      </div>`;
+
+    $('imp-step3').querySelector('.btn-primary').disabled = false;
+    $('imp-step3').querySelector('.btn-primary').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import All Leads`;
+
+    toast(`${result.imported} leads imported successfully`);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Import All Leads';
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────
+fetch('/api/stats').then(() => {
+  $('api-status').textContent = '● Connected';
+  $('api-status').style.color = 'rgba(80,200,120,0.8)';
+}).catch(() => {
+  $('api-status').textContent = '● Offline';
+  $('api-status').style.color = 'rgba(200,80,80,0.8)';
+});
+
+navigate('dashboard');
+</script>
+</body>
+</html>
